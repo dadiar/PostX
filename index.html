@@ -41,5 +41,57 @@
     <a href="https://amzn.to/40x0sss">Check out this product</a>
     <h1>Coming Soon Post <br> <span class="x">X</span></h1>
     <img src="earth.jpg" alt="Earth Image">
+    <script>
+		// define constants
+		const API_KEY = 'YOUR_AMAZON_API_KEY';
+		const ASSOCIATE_TAG = 'https://amzn.to/40x0sss';
+		const PRODUCTS_PER_PAGE = 10;
+// define variables
+let page = 1;
+
+// define functions
+function getProducts() {
+  // construct URL for Amazon Product Advertising API
+  let url = `https://webservices.amazon.com/onca/xml?Service=AWSECommerceService&Operation=ItemSearch&Keywords=*&SearchIndex=All&AssociateTag=${ASSOCIATE_TAG}&AWSAccessKeyId=${API_KEY}&ItemPage=${page}&ResponseGroup=Images,ItemAttributes,Offers`;
+
+  // send HTTP request to API endpoint
+  fetch(url)
+    .then(response => response.text())
+    .then(xml => {
+      // parse XML response into a JavaScript object
+      let parser = new DOMParser();
+      let xmlDocument = parser.parseFromString(xml, 'text/xml');
+      let jsonResponse = xmlToJson(xmlDocument);
+
+      // extract product information from JSON response
+      let products = jsonResponse.ItemSearchResponse.Items.Item;
+
+      // render products on the page
+      let productsList = document.getElementById('products-list');
+      products.forEach(product => {
+        let productItem = document.createElement('li');
+        productItem.innerHTML = `
+          <img src="${product.LargeImage.URL}" alt="${product.ItemAttributes.Title}">
+          <h3>${product.ItemAttributes.Title}</h3>
+          <p>Price: $${product.Offers.Offer.OfferListing.Price.Amount / 100}</p>
+          <button>Add to Cart</button>
+        `;
+        productsList.appendChild(productItem);
+      });
+    })
+    .catch(error => console.error(error));
+}
+
+function loadMoreProducts() {
+  page++;
+  getProducts();
+}
+
+// add event listeners
+document.getElementById('load-more-btn').addEventListener('click', loadMoreProducts);
+
+// load initial set of products
+getProducts();
+</script>
   </body>
 </html>
